@@ -9,6 +9,7 @@ TOKEN=os.getenv("OPENAI_API_KEY")
 URL="https://api.openai.com/v1/chat/completions"
 
 CONTEXT="""
+You're a helpful AI.
 """
 
 class ChatSession():
