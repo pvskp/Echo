@@ -6,6 +6,7 @@ import urllib.parse
 import json
 import os
 
+import signal
 import curses
 
 TOKEN=os.getenv("OPENAI_API_KEY")
@@ -23,6 +24,17 @@ class ChatSession():
         ]
 
         self.stdscr = curses.initscr()
+        self.stdscr.keypad(True)
+
+        curses.raw()
+        signal.signal(signal.SIGINT, self._exitWindow)
+
+    def _exitWindow(self, signal, frame):
+        curses.nocbreak()
+        self.stdscr.keypad(False)
+        curses.echo()
+        curses.endwin()
+        exit(0)
 
     def startChat(self):
         # Cria uma janela para exibir as mensagens
@@ -38,16 +50,18 @@ class ChatSession():
         while True:
          # Lê a entrada do usuário
          input_str = input_win.getstr(0, 2).decode()
+         # input_win.refresh()
+
          input_win.erase()
          input_win.addstr(0, 0, "> ")
-    
-         if input_str == 'exit':
-            curses.endwin()
-            break
+    # 
+    #      if input_str == 'exit':
+    #         curses.endwin()
+    #         break
 
          # Exibe a mensagem na janela de mensagens
-        msg_win.addstr(input_str + "\n")
-        msg_win.refresh()
+         msg_win.addstr(input_str + "\n")
+         msg_win.refresh()
 
 
     def sendQuestion (self, question: str) -> str:
