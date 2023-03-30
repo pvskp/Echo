@@ -8,6 +8,7 @@ import os
 
 import signal
 import curses
+import asyncio
 
 TOKEN=os.getenv("OPENAI_API_KEY")
 URL="https://api.openai.com/v1/chat/completions"
@@ -26,43 +27,49 @@ class ChatSession():
         self.stdscr = curses.initscr()
         self.stdscr.keypad(True)
 
-        curses.raw()
-        signal.signal(signal.SIGINT, self._exitWindow)
+        # Cria uma janela para exibir as mensagens
+        self.msg_win = curses.newwin(10, 50, 0, 0)
+        self.msg_win.scrollok(True) # Permite que a janela role automaticamente
 
-    def _exitWindow(self, signal, frame):
+        # Cria uma janela para a caixa de texto
+        self.input_win = curses.newwin(1, 50, 11, 0)
+        self.input_win.addstr(0, 0, "> ")
+        self.input_win.refresh()
+
+        # eventListenerLoop = asyncio.get_event_loop()
+        # listener = eventListenerLoop.create_task(self.listenEvent())
+        # eventListenerLoop.run_until_complete(listener)
+
+        # curses.raw()
+        signal.signal(signal.SIGINT, self._exitSession)
+
+    def _exitSession(self, signal, frame):
         curses.nocbreak()
         self.stdscr.keypad(False)
         curses.echo()
         curses.endwin()
         exit(0)
 
+    def _printMsg(self, msg):
+         self.msg_win.addstr(msg + "\n")
+         self.msg_win.refresh()
+
+         self.input_win.erase()
+         self.input_win.addstr(0, 0, "> ")
+
+    async def listenEvent(self):
+        c = self.stdscr.getch()
+        if c == '3':
+            self._exitSession(None, None)
+
     def startChat(self):
-        # Cria uma janela para exibir as mensagens
-        msg_win = curses.newwin(10, 50, 0, 0)
-        msg_win.scrollok(True) # Permite que a janela role automaticamente
-
-        # Cria uma janela para a caixa de texto
-        input_win = curses.newwin(1, 50, 11, 0)
-        input_win.addstr(0, 0, "> ")
-        input_win.refresh()
-
         # Loop principal do chat
+        # input = ''
         while True:
          # Lê a entrada do usuário
-         input_str = input_win.getstr(0, 2).decode()
-         # input_win.refresh()
-
-         input_win.erase()
-         input_win.addstr(0, 0, "> ")
-    # 
-    #      if input_str == 'exit':
-    #         curses.endwin()
-    #         break
-
-         # Exibe a mensagem na janela de mensagens
-         msg_win.addstr(input_str + "\n")
-         msg_win.refresh()
-
+         input_str = self.input_win.getstr(0, 2).decode()
+         self._printMsg(input_str)
+         # char = self.input_win.get_wch()
 
     def sendQuestion (self, question: str) -> str:
         self.fillContext({"role": "user", "content": question})
