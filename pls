@@ -8,6 +8,7 @@ import os
 
 import signal
 import curses
+import curses.textpad
 import asyncio
 
 TOKEN=os.getenv("OPENAI_API_KEY")
@@ -24,17 +25,8 @@ class ChatSession():
             {"role": "system", "content": CONTEXT}
         ]
 
-        self.stdscr = curses.initscr()
+        self.drawScreen()
         self.stdscr.keypad(True)
-
-        # Cria uma janela para exibir as mensagens
-        self.msg_win = curses.newwin(10, 50, 0, 0)
-        self.msg_win.scrollok(True) # Permite que a janela role automaticamente
-
-        # Cria uma janela para a caixa de texto
-        self.input_win = curses.newwin(1, 50, 11, 0)
-        self.input_win.addstr(0, 0, "> ")
-        self.input_win.refresh()
 
         # eventListenerLoop = asyncio.get_event_loop()
         # listener = eventListenerLoop.create_task(self.listenEvent())
@@ -42,6 +34,22 @@ class ChatSession():
 
         # curses.raw()
         signal.signal(signal.SIGINT, self._exitSession)
+
+    def drawScreen(self):
+        self.stdscr = curses.initscr()
+        # Cria uma janela para exibir as mensagens
+        self.msg_win = curses.newwin(10, 50, 0, 0)
+        self.msg_win.scrollok(True) # Permite que a janela role automaticamente
+
+        # Cria uma janela para a caixa de texto
+        self.input_win = curses.newwin(1, 50, 11, 0)
+        input_text_box = curses.rectangle(10, 10, 10, 10)
+        input_text_box.edit()
+
+        self.input_win.addstr(0, 0, "> ")
+        self.input_win.refresh()
+
+        pass
 
     def _exitSession(self, signal, frame):
         curses.nocbreak()
